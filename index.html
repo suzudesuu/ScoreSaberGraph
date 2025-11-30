@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ScoreSaber Graph Generator</title>
+
+    <!-- React via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      body {
+        background: radial-gradient(circle at top, #111827 0, #020617 55%);
+        color: #e5e7eb;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .app-root {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        padding: 24px;
+      }
+
+      .card-wrapper {
+        perspective: 1600px;
+        max-width: 820px;
+        width: 100%;
+      }
+
+      .main-card {
+        position: relative;
+        background: radial-gradient(circle at top left, #111827 0, #020617 70%);
+        border-radius: 22px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.6);
+        padding: 22px 26px 18px;
+        transform-style: preserve-3d;
+
+        opacity: 0;
+        animation: card-enter 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+
+        transition: transform 0.25s ease-out, box-shadow 0.25s ease-out,
+          background 0.25s ease-out;
+        overflow: hidden;
+      }
+
+      @keyframes card-enter {
+        from {
+          opacity: 0;
+          transform: translateY(50px) scale(0.93);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+
+      .main-card:hover {
+        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.18);
+        background: radial-gradient(circle at top left, #131722 0, #020617 75%);
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+        gap: 16px;
+      }
+
+      .title-block h1 {
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .title-block p {
+        margin-top: 4px;
+        font-size: 12px;
+        color: #9ca3af;
+      }
+
+      .header-right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+      }
+
+      .version {
+        font-size: 11px;
+        color: #6b7280;
+      }
+
+      /* Tabs */
+      .tabs {
+        display: inline-flex;
+        background: rgba(15, 23, 42, 0.9);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 4px;
+      }
+
+      .tab-button {
+        border-radius: 999px;
+        border: none;
+        padding: 5px 12px;
+        font-size: 11px;
+        background: transparent;
+        color: #9ca3af;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+      }
+
+      .tab-button.active {
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: #f9fafb;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4);
+      }
+
+      .row {
+        display: flex;
+        gap: 16px;
+        margin-top: 14px;
+      }
+
+      .col {
+        flex: 1;
+      }
+
+      label {
+        font-size: 13px;
+        color: #e5e7eb;
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      input[type="text"],
+      select {
+        width: 100%;
+        background: #020617;
+        color: #e5e7eb;
+        border-radius: 10px;
+        border: 1px solid #374151;
+        padding: 8px 10px;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+      }
+
+      input[type="text"]:focus,
+      select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.5);
+        background: #02091d;
+      }
+
+      /* КНОПКА */
+      .btn-main {
+        margin-top: 18px;
+        width: 100%;
+        padding: 11px;
+        border-radius: 999px;
+        border: none;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        color: white;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+
+        box-shadow: 0 3px 8px rgba(59, 130, 246, 0.18);
+
+        transition: transform 0.1s, box-shadow 0.1s, opacity 0.1s;
+      }
+
+      .btn-main:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 14px rgba(59, 130, 246, 0.3);
+        opacity: 0.98;
+      }
+
+      .btn-main:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 5px rgba(59, 130, 246, 0.14);
+        opacity: 0.94;
+      }
+
+      .btn-main:disabled {
+        opacity: 0.7;
+        cursor: default;
+        transform: none;
+        box-shadow: 0 2px 5px rgba(15, 23, 42, 0.6);
+      }
+
+      .small-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 10px;
+      }
+
+      .choose-folder-btn {
+        margin-top: 22px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        border: 1px solid #374151;
+        background: #020617;
+        font-size: 12px;
+        color: #e5e7eb;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+
+      .choose-folder-btn:hover {
+        border-color: #22c55e;
+        background: #022c22;
+        color: #bbf7d0;
+      }
+
+      .status {
+        margin-top: 10px;
+        font-size: 11px;
+        color: #9ca3af;
+        min-height: 14px;
+      }
+
+      .status.error {
+        color: #fecaca;
+      }
+
+      .status.ok {
+        color: #bbf7d0;
+      }
+
+      .card-glow {
+        position: absolute;
+        inset: 0;
+        border-radius: 26px;
+        background: radial-gradient(
+          circle at top,
+          rgba(59, 130, 246, 0.18),
+          transparent 70%
+        );
+        filter: blur(20px);
+        opacity: 0.45;
+        pointer-events: none;
+        z-index: -2;
+      }
+
+      .card-noise {
+        position: absolute;
+        inset: 0;
+        border-radius: 22px;
+        pointer-events: none;
+        opacity: 0.18;
+        mix-blend-mode: soft-light;
+        z-index: -1;
+        background-image:
+          repeating-linear-gradient(
+            45deg,
+            rgba(255, 255, 255, 0.06) 0px,
+            rgba(255, 255, 255, 0.06) 1px,
+            transparent 1px,
+            transparent 3px
+          ),
+          repeating-linear-gradient(
+            135deg,
+            rgba(0, 0, 0, 0.3) 0px,
+            rgba(0, 0, 0, 0.3) 1px,
+            transparent 1px,
+            transparent 4px
+          );
+      }
+
+      /* PLAYER CARD */
+
+      .player-card {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        background: rgba(15, 23, 42, 0.9);
+      }
+
+      .player-bg {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center;
+        filter: blur(14px) brightness(1.25) saturate(1.05);
+        opacity: 0.55;
+        transform: scale(1.45);
+        z-index: -3;
+      }
+
+      .player-overlay {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(255, 255, 255, 0.08),
+            transparent 45%
+          ),
+          linear-gradient(
+            180deg,
+            rgba(10, 10, 20, 0.38),
+            rgba(10, 10, 20, 0.72)
+          );
+        z-index: -2;
+      }
+
+      .player-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .player-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .player-avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        object-fit: cover;
+        border: 2px solid rgba(248, 250, 252, 0.9);
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.8);
+      }
+
+      .player-name {
+        font-size: 16px;
+        font-weight: 600;
+      }
+
+      .player-meta {
+        font-size: 12px;
+        color: #e5e7eb;
+        opacity: 0.9;
+      }
+
+      .player-right {
+        text-align: right;
+      }
+
+      .player-rank {
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .player-pp {
+        font-size: 13px;
+        color: #e5e7eb;
+        opacity: 0.9;
+      }
+
+      .player-country-text {
+        font-size: 12px;
+        color: #d1d5db;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root" class="app-root"></div>
+
+    <script type="text/babel">
+      const { useState } = React;
+
+      function App() {
+        const [playerId, setPlayerId] = useState("");
+        const [background, setBackground] = useState("transparent");
+        const [format, setFormat] = useState("png");
+        const [outputDir, setOutputDir] = useState("");
+        const [status, setStatus] = useState(
+          "По умолчанию используется папка проекта. Можно выбрать свою через кнопку справа."
+        );
+        const [statusType, setStatusType] = useState("");
+
+        // теперь по умолчанию открывается BOTH
+        const [activeTab, setActiveTab] = useState("both"); // both | player | graph
+
+        const [tiltStyle, setTiltStyle] = useState({
+          transform:
+            "perspective(1600px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)",
+        });
+
+        const [playerInfo, setPlayerInfo] = useState(null);
+        const [isBusy, setIsBusy] = useState(false);
+
+        // ПАРАЛЛАКС
+        const handleMouseMove = (e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const midX = rect.width / 2;
+          const midY = rect.height / 2;
+
+          const rotateX = ((y - midY) / midY) * 20;
+          const rotateY = ((x - midX) / midX) * -20;
+
+          setTiltStyle({
+            transform: `perspective(1600px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-8px) scale(1.05)`,
+          });
+        };
+
+        const handleMouseLeave = () => {
+          setTiltStyle({
+            transform:
+              "perspective(1600px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)",
+          });
+        };
+
+        // Загрузка инфы игрока из ScoreSaber
+        const fetchPlayerInfo = async () => {
+          const trimmed = playerId.trim();
+          if (!trimmed) {
+            setStatus("Введите ScoreSaber ID");
+            setStatusType("error");
+            throw new Error("Нет ID игрока");
+          }
+
+          const url = `https://scoresaber.com/api/player/${encodeURIComponent(
+            trimmed
+          )}/full`;
+
+          const res = await fetch(url);
+          if (!res.ok) {
+            throw new Error("ScoreSaber API вернул ошибку " + res.status);
+          }
+          const data = await res.json();
+
+          const info = data.playerInfo || data;
+
+          const normalized = {
+            name: info.name || "Unknown player",
+            country: info.country || "",
+            avatar:
+              info.profilePicture || info.avatar || info.profile || "",
+            pp: info.pp || info.playerPp || 0,
+            rank: info.rank || info.globalRank || 0,
+            countryRank: info.countryRank || 0,
+          };
+
+          setPlayerInfo(normalized);
+          return normalized;
+        };
+
+        const chooseFolder = async () => {
+          try {
+            const dir = await window.electronAPI.chooseOutputDir();
+            if (dir) {
+              setOutputDir(dir);
+              setStatusType("ok");
+              setStatus("Папка для сохранения: " + dir);
+            } else {
+              setStatusType("");
+              setStatus("Выбор папки отменён.");
+            }
+          } catch (err) {
+            setStatusType("error");
+            setStatus("Ошибка при выборе папки: " + err.message);
+          }
+        };
+
+        const generate = async () => {
+          if (!playerId.trim()) {
+            setStatus("Введите ScoreSaber ID");
+            setStatusType("error");
+            return;
+          }
+
+          setIsBusy(true);
+          setStatusType("");
+          try {
+            // Player Card или Both: сначала тянем данные игрока
+            if (activeTab === "player" || activeTab === "both") {
+              setStatus("Загружаю информацию об игроке...");
+              try {
+                await fetchPlayerInfo();
+                setStatus("Информация об игроке обновлена.");
+                setStatusType("ok");
+              } catch (err) {
+                setStatus("Не удалось получить данные игрока: " + err.message);
+                setStatusType("error");
+                if (activeTab === "player") {
+                  return;
+                }
+              }
+            }
+
+            // 🔹 ДОБАВЛЕНО: отдельная генерация PNG для Player Card
+            if (activeTab === "player") {
+              setStatus("Генерирую карточку игрока...");
+              setStatusType("");
+
+              const resultPath = await window.electronAPI.generateGraph({
+                mode: "player",      // <== важный параметр для Python
+                playerId,
+                format,              // Python всё равно сохранит PNG, но это не мешает
+                outputDir,
+              });
+
+              setStatus(resultPath ? "Готово: " + resultPath : "Карточка сохранена");
+              setStatusType("ok");
+              return; // дальше график/both не нужны
+            }
+
+            // Graph или Both: генерируем картинку через Python
+            if (activeTab === "graph" || activeTab === "both") {
+              // на Both фон всегда dark
+              const bgToUse = activeTab === "graph" ? background : "dark";
+
+              setStatus(
+                activeTab === "both"
+                  ? "Генерирую карточку + график..."
+                  : "Генерирую график..."
+              );
+              setStatusType("");
+
+              const resultPath = await window.electronAPI.generateGraph({
+                mode: activeTab,          // graph | both
+                playerId,
+                background: bgToUse,
+                format,
+                outputDir,
+              });
+
+              setStatus("Готово: " + resultPath);
+              setStatusType("ok");
+            }
+          } catch (err) {
+            setStatus("Ошибка: " + err.message);
+            setStatusType("error");
+          } finally {
+            setIsBusy(false);
+          }
+        };
+
+        const buttonLabel =
+          activeTab === "graph"
+            ? "Generate graph"
+            : activeTab === "player"
+            ? "Generate player card"
+            : "Generate both";
+
+        return (
+          <div className="card-wrapper">
+            <div
+              className="main-card"
+              style={tiltStyle}
+              onMouseMove={handleMouseMove}
+              onMouseLeave={handleMouseLeave}
+            >
+              <div className="card-glow"></div>
+              <div className="card-noise"></div>
+
+              <div className="header">
+                <div className="title-block">
+                  <h1>ScoreSaber Cards Generator</h1>
+                  <p>Generate Beat Saber style cards from ScoreSaber leaderboard.</p>
+                </div>
+                <div className="header-right">
+                  <div className="version">v1.1</div>
+                  <div className="tabs">
+                    <button
+                      className={
+                        "tab-button " + (activeTab === "both" ? "active" : "")
+                      }
+                      onClick={() => setActiveTab("both")}
+                    >
+                      Both
+                    </button>
+                    <button
+                      className={
+                        "tab-button " + (activeTab === "player" ? "active" : "")
+                      }
+                      onClick={() => setActiveTab("player")}
+                    >
+                      Player Card
+                    </button>
+                    <button
+                      className={
+                        "tab-button " + (activeTab === "graph" ? "active" : "")
+                      }
+                      onClick={() => setActiveTab("graph")}
+                    >
+                      Graph
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {playerInfo && (activeTab === "both" || activeTab === "player") && (
+                <div className="player-card">
+                  {playerInfo.avatar && (
+                    <div
+                      className="player-bg"
+                      style={{
+                        backgroundImage: `url(${playerInfo.avatar})`,
+                      }}
+                    ></div>
+                  )}
+                  <div className="player-overlay"></div>
+                  <div className="player-content">
+                    <div className="player-left">
+                      {playerInfo.avatar && (
+                        <img
+                          className="player-avatar"
+                          src={playerInfo.avatar}
+                          alt={playerInfo.name}
+                        />
+                      )}
+                      <div>
+                        <div className="player-name">{playerInfo.name}</div>
+                        <div className="player-meta">
+                          {playerInfo.country ? (
+                            <span className="player-country-text">
+                              {playerInfo.country} — #{playerInfo.countryRank}
+                            </span>
+                          ) : (
+                            <span className="player-country-text">
+                              Country unknown
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="player-right">
+                      <div className="player-rank">
+                        #{playerInfo.rank || "?"}
+                      </div>
+                      <div className="player-pp">
+                        {Math.round(playerInfo.pp)} pp
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="row">
+                <div className="col">
+                  <label>ScoreSaber ID</label>
+                  <input
+                    type="text"
+                    placeholder="7656119XXXXXXXXXX"
+                    value={playerId}
+                    onChange={(e) => setPlayerId(e.target.value)}
+                  />
+                </div>
+
+                {activeTab === "graph" && (
+                  <div className="col">
+                    <label>Background</label>
+                    <select
+                      value={background}
+                      onChange={(e) => setBackground(e.target.value)}
+                    >
+                      <option value="dark">Dark</option>
+                      <option value="transparent">Transparent</option>
+                    </select>
+                  </div>
+                )}
+
+                <div className="col">
+                  <label>Format</label>
+                  <select
+                    value={format}
+                    onChange={(e) => setFormat(e.target.value)}
+                  >
+                    <option value="png">PNG</option>
+                    <option value="svg">SVG</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="small-row">
+                <div className="col">
+                  <label>Output folder</label>
+                  <input
+                    type="text"
+                    value={outputDir}
+                    readOnly
+                    placeholder="Project folder (по умолчанию)"
+                  />
+                </div>
+
+                <div>
+                  <button className="choose-folder-btn" onClick={chooseFolder}>
+                    Choose folder…
+                  </button>
+                </div>
+              </div>
+
+              <button
+                className="btn-main"
+                onClick={generate}
+                disabled={isBusy}
+              >
+                {isBusy ? "Working..." : buttonLabel}
+              </button>
+
+              <div
+                id="statusText"
+                className={`status ${
+                  statusType === "error"
+                    ? "error"
+                    : statusType === "ok"
+                    ? "ok"
+                    : ""
+                }`}
+              >
+                {status}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+{
+  "name": "scoresabergraph",
+  "version": "1.1.0",
+  "description": "ScoreSaber Graph & Player Card Generator",
+  "main": "main.js",
+  "author": "Le Thao",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.scoresaber.graphgenerator",
+    "productName": "ScoreSaber Graph Generator",
+    "files": [
+      "**/*",
+      "!dist",
+      "!node_modules/*/{test,__tests__,tests}/**"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "electron": "^39.2.4",
+    "electron-builder": "^24.6.4"
+  }
+}
