@@ -13,4 +13,8 @@ A simple app that generates images based on:
 
 ```bash
 pip install -r requirements.txt
+```
 
+## Example
+
+<img width="1696" height="820" alt="76561198133747138_card_graph" src="https://github.com/user-attachments/assets/9ff688c6-c725-406b-9fdd-233aa7bb7ce7" />
