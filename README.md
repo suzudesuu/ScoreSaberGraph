@@ -4,7 +4,7 @@ A simple app that generates images based on:
 
 - Player's Rank Graph
 - Player's Information (Country & Global Rank, PP etc.)
-- Combined Image of both things listed above**
+- Combined Image of both things listed above
 
 ## Installation
 
@@ -13,3 +13,4 @@ A simple app that generates images based on:
 
 ```bash
 pip install -r requirements.txt
+
